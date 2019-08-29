@@ -1,2 +1,3 @@
 # go-web-template
-A golang web template
+A simple golang web template, help to quickly create a website.
+
