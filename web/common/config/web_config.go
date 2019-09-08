@@ -8,6 +8,7 @@ import (
 
 type WebConfig struct {
 	Debug      bool
+	Domain     string
 	Port       string
 	SSLPort    string
 	SSLCert    string
@@ -20,6 +21,7 @@ var WebCfg WebConfig
 
 func init() {
 	WebCfg.Debug = true
+	WebCfg.Domain = "localhost"
 	WebCfg.Port = "80"
 	WebCfg.SSLPort = "443"
 	WebCfg.SSLCert = ""

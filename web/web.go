@@ -10,7 +10,26 @@ import (
 	"github.com/ddiay/go-web-template/web/common/logger"
 
 	"github.com/gin-gonic/gin"
+	"github.com/unrolled/secure"
 )
+
+func TlsHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		secureMiddleware := secure.New(secure.Options{
+			SSLRedirect: true,
+			SSLHost:     ":" + config.WebCfg.SSLPort,
+		})
+		err := secureMiddleware.Process(c.Writer, c.Request)
+
+		// If there was an error, do not continue.
+		if err != nil {
+			logger.Error(err.Error())
+			return
+		}
+
+		c.Next()
+	}
+}
 
 func StartWeb() bool {
 	// 初始化Web日志对象
@@ -21,7 +40,7 @@ func StartWeb() bool {
 	err := config.LoadConfig("web.cfg")
 	if err != nil {
 		logger.Warn(err.Error())
-		// return
+		return false
 	}
 
 	if !config.WebCfg.Debug {
@@ -32,8 +51,14 @@ func StartWeb() bool {
 	gin.DefaultWriter = io.MultiWriter(ginlogWriter, os.Stdout)
 
 	r := gin.Default()
-
 	initRouters(r)
+
+	if config.WebCfg.UseSSL {
+		r.Use(TlsHandler())
+		err = r.RunTLS(":"+config.WebCfg.SSLPort, config.WebCfg.SSLCert, config.WebCfg.SSLCertKey)
+	} else {
+		err = r.Run(":" + config.WebCfg.Port)
+	}
 
 	err = r.Run(":" + config.WebCfg.Port)
 	if err != nil {
